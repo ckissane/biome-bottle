@@ -1,25 +1,64 @@
-import type { Component } from 'solid-js';
+import {
+  Component,
+  createEffect,
+  createRenderEffect,
+  onCleanup,
+} from "solid-js";
+import REGL from "regl";
 
-import logo from './logo.svg';
-import styles from './App.module.css';
+import styles from "./App.module.css";
 
 const App: Component = () => {
+  let canvas: HTMLCanvasElement;
+  createEffect(() => {
+    if (canvas) {
+      const regl = REGL(canvas);
+
+      const drawTriangle = regl({
+        frag: `
+          precision mediump float;
+          void main() {
+            gl_FragColor = vec4(1, 0, 0.5, 1);
+          }
+        `,
+        vert: `
+          precision mediump float;
+          attribute vec2 position;
+          void main() {
+            gl_Position = vec4(position, 0, 1);
+          }
+        `,
+        depth: { enable: false, mask: false },
+        attributes: {
+          position: [
+            [-4, 0],
+            [4, 4],
+            [4, -4],
+          ],
+        },
+        uniforms: {
+          aspect: ({ viewportWidth, viewportHeight }) =>
+            viewportWidth / viewportHeight,
+        },
+        count: 3,
+      });
+
+      // Called every frame
+      regl.frame(() => {
+        drawTriangle();
+      });
+      onCleanup(() => {
+        regl.destroy();
+      });
+    }
+  });
   return (
     <div class={styles.App}>
-      <header class={styles.header}>
-        <img src={logo} class={styles.logo} alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          class={styles.link}
-          href="https://github.com/solidjs/solid"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn Solid
-        </a>
-      </header>
+      <canvas
+        ref={(x) => {
+          canvas = x;
+        }}
+      />
     </div>
   );
 };
