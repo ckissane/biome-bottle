@@ -7,27 +7,18 @@ import {
 import REGL from "regl";
 
 import styles from "./App.module.css";
+import somethingFrag from "./shaders/something.frag?raw";
+import somethingVert from "./shaders/something.vert?raw";
 
 const App: Component = () => {
-  let canvas: HTMLCanvasElement;
+  let div: HTMLDivElement;
   createEffect(() => {
-    if (canvas) {
-      const regl = REGL(canvas);
+    if (div) {
+      const regl = REGL(div);
 
       const drawTriangle = regl({
-        frag: `
-          precision mediump float;
-          void main() {
-            gl_FragColor = vec4(1, 0, 0.5, 1);
-          }
-        `,
-        vert: `
-          precision mediump float;
-          attribute vec2 position;
-          void main() {
-            gl_Position = vec4(position, 0, 1);
-          }
-        `,
+        frag: somethingFrag,
+        vert: somethingVert,
         depth: { enable: false, mask: false },
         attributes: {
           position: [
@@ -39,6 +30,7 @@ const App: Component = () => {
         uniforms: {
           aspect: ({ viewportWidth, viewportHeight }) =>
             viewportWidth / viewportHeight,
+          time: ({ tick }) => tick * 0.001,
         },
         count: 3,
       });
@@ -54,9 +46,9 @@ const App: Component = () => {
   });
   return (
     <div class={styles.App}>
-      <canvas
+      <div
         ref={(x) => {
-          canvas = x;
+          div = x;
         }}
       />
     </div>
